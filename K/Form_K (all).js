@@ -167,6 +167,17 @@ fd.spRendered(async function () {
 
         // }
     })
+
+    fd.control('Form_K_Detail').templates = {
+        CalculatedCompensationExcludeVat: function (ctx) {
+            const value = ctx.row.CalculatedCompensationExcludeVat;
+            if (value.includes('-'))
+                return `<span style="color:#FF0000">${value}</span>`;
+            return `<span style="color:#00CC00">${value}</span>`;
+        }
+    }
+
+    
     $('.loading').fadeOut('slow');
 
 }); // end fd.spRendered

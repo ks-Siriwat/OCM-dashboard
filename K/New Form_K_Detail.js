@@ -11,6 +11,52 @@ window.userLogin = {
     Email: _spPageContextInfo.userEmail
 }
 
+window.NumberWithComma = function (input) {
+    const userInput = input;
+    // Remove any non-numeric characters except commas and periods
+    const numericInput = userInput.replace(/[^\d,.]/g, '');
+
+    // Check if the cleaned input is empty
+    if (numericInput === '') {
+        input = '0.00';
+        // Clear the input field
+    } else {
+        // Format the numeric value with commas as thousands separators
+        const formattedValue = formatNumberWithCommas(numericInput);
+
+        // Update the input field with the formatted value
+        input = formattedValue;
+
+    }
+}
+
+window.formatNumberWithCommas = function (value) {
+    // Convert the value to a number and handle potential errors
+    let numberValue;
+    try {
+        // Convert the value to a number and handle potential errors
+        numberValue = parseFloat(value.replace(/,/g, ''));
+    } catch (e) {
+        return NaN
+    }
+
+    // Format the number with commas and two decimal places
+    const formattedNumber = numberValue.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    return formattedNumber;
+};
+
+window.ConvertToNumber = function (numWithComma) {
+    let convertResult = numWithComma.replace(/,/g, "");
+    if (convertResult == '' || convertResult <= 0) {
+        return 0;
+    }
+    return Number(convertResult);
+}
+
 window.transformLocalStorageValue = function (value) {
     try {
         let falsyKeywords = ["null", "undefined", ""];
@@ -144,6 +190,38 @@ fd.spRendered(async function () {
                 fd.field('OrdinalNum').value = newOrdinalNum;
             })
     })()
+
+    const fieldNames = [
+        'InputTotalWorkValue',
+        'InputKvalueExcludeVat',
+        'InputCalculatedCompensationExcludeVat'
+    ];
+    fieldNames.forEach(fieldName => {
+        var elem = $(fd.field(fieldName).$el).find('input');
+
+        elem.on("focusin", function (event) {
+            $(this).select();
+        })
+
+        elem.on("focusout", function (event) {
+            const numericInput = fd.field(fieldName).value?.replace(/[^\d,.]/g, '') || '';
+
+            // Check if the cleaned input is empty
+            if (numericInput === '') {
+                fd.field(fieldName).value = '0.00';
+                // Clear the input field
+            } else {
+                // Format the numeric value with commas as thousands separators
+                const formattedValue = formatNumberWithCommas(numericInput);
+
+                // Update the input field with the formatted value
+                fd.field(fieldName).value = formattedValue;
+                fd.field(fieldName.replace('Input', '')).value = ConvertToNumber(formattedValue);
+
+            }
+        });
+    });
+
 
     /**************************ONCHANGE**************************/
 
