@@ -157,7 +157,7 @@ fd.spRendered(async function () {
         width: 1280,
         height: 720
     }
-    fd.control('Form_K_Detail').buttons[2].disabled = true;
+    // fd.control('Form_K_Detail').buttons[2].disabled = true;
 
     fd.control('Form_K_Detail').$on('change', async function (changedRow) {
         // if (changedRow.type === 'add') {
@@ -173,11 +173,23 @@ fd.spRendered(async function () {
             const value = ctx.row.CalculatedCompensationExcludeVat;
             if (value.includes('-'))
                 return `<span style="color:#FF0000">${value}</span>`;
-            return `<span style="color:#00CC00">${value}</span>`;
+            return `<span>${value}</span>`;
+        },
+        TotalWorkValue: function (ctx) {
+            const value = ctx.row.TotalWorkValue;
+            if (value.includes('-'))
+                return `<span style="color:#FF0000">${value}</span>`;
+            return `<span>${value}</span>`;
+        },
+        KvalueExcludeVat: function (ctx) {
+            const value = ctx.row.KvalueExcludeVat;
+            if (value.includes('-'))
+                return `<span style="color:#FF0000">${value}</span>`;
+            return `<span>${value}</span>`;
         }
     }
 
-    
+
     $('.loading').fadeOut('slow');
 
 }); // end fd.spRendered

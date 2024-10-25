@@ -157,7 +157,7 @@ fd.spRendered(async function () {
         width: 1280,
         height: 720
     }
-    fd.control('Form_Start_Finish_Detail').buttons[2].disabled = true;
+    // fd.control('Form_Start_Finish_Detail').buttons[2].disabled = true;
 
     fd.control('Form_Start_Finish_Detail').$on('change', async function (changedRow) {
         // if (changedRow.type === 'add') {

@@ -30,7 +30,7 @@ window.NumberWithComma = function (input) {
     }
 }
 
-window.formatNumberWithCommas = function (value) {
+window.formatNumberWithCommas = function (value, minD = 0, maxD = 3) {
     // Convert the value to a number and handle potential errors
     let numberValue;
     try {
@@ -41,8 +41,8 @@ window.formatNumberWithCommas = function (value) {
     }
     // Format the number with commas and two decimal places
     const formattedNumber = numberValue.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        minimumFractionDigits: minD,
+        maximumFractionDigits: maxD
     });
 
     return formattedNumber;
@@ -50,7 +50,7 @@ window.formatNumberWithCommas = function (value) {
 
 window.ConvertToNumber = function (numWithComma) {
     let convertResult = numWithComma.replace(/,/g, "");
-    if (convertResult == '' || convertResult <= 0) {
+    if (convertResult == '') {
         return 0;
     }
     return Number(convertResult);
@@ -173,7 +173,9 @@ fd.spRendered(async function () {
     const fieldNumber = [
         'TotalWorkValue',
         'KvalueExcludeVat',
-        'CalculatedCompensationExcludeVat'
+        'CalculatedCompensationExcludeVat',
+        'Kvalue',
+        'Deduct4pctRemaining'
     ]
     fieldNumber.forEach(field => {
         fd.field('Input' + field).value = formatNumberWithCommas(String(fd.field(field).value) || NaN)
@@ -181,31 +183,33 @@ fd.spRendered(async function () {
 
 
     const fieldNames = [
-        'InputTotalWorkValue',
-        'InputKvalueExcludeVat',
-        'InputCalculatedCompensationExcludeVat'
+        { Name: 'InputTotalWorkValue', minD: 2, maxD: 2 },
+        { Name: 'InputKvalueExcludeVat', minD: 2, maxD: 2 },
+        { Name: 'InputCalculatedCompensationExcludeVat', minD: 2, maxD: 2 },
+        { Name: 'InputKvalue', minD: 3, maxD: 3 },
+        { Name: 'InputDeduct4pctRemaining', minD: 3, maxD: 3 }
     ];
-    fieldNames.forEach(fieldName => {
-        var elem = $(fd.field(fieldName).$el).find('input');
+    fieldNames.forEach(field => {
+        var elem = $(fd.field(field.Name).$el).find('input');
 
         elem.on("focusin", function (event) {
             $(this).select();
         })
 
         elem.on("focusout", function (event) {
-            const numericInput = fd.field(fieldName).value?.replace(/[^\d,.]/g, '') || '';
+            const numericInput = fd.field(field.Name).value || '';
 
             // Check if the cleaned input is empty
             if (numericInput === '') {
-                fd.field(fieldName).value = '0.00';
+                fd.field(field.Name).value = '0.00';
                 // Clear the input field
             } else {
                 // Format the numeric value with commas as thousands separators
-                const formattedValue = formatNumberWithCommas(numericInput);
+                const formattedValue = formatNumberWithCommas(numericInput, field.minD, field.maxD);
 
                 // Update the input field with the formatted value
-                fd.field(fieldName).value = formattedValue;
-                fd.field(fieldName.replace('Input', '')).value = ConvertToNumber(formattedValue);
+                fd.field(field.Name).value = formattedValue;
+                fd.field(field.Name.replace('Input', '')).value = ConvertToNumber(formattedValue);
 
             }
         });
