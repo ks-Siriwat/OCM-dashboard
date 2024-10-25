@@ -100,6 +100,68 @@ window.delay = function (callback, ms) {
     };
 }
 
+// cal rest of items
+window.cal_restOfItems = async function () {
+    let restOfItems = await getItemsFrom('Form_Start_Finish_Detail', `SF_JobCode eq '${fd.field('SF_JobCode').value}' and SF_OrdinalNum eq ${fd.field('SF_OrdinalNum').value + 1}`, 'SF_UpdateCount')
+
+    for (let i = 0; i < restOfItems.length; i++) {
+        const currentItem = restOfItems[i];
+        if (currentItem.SF_OrdinalNum === 0)
+            continue;
+
+        let extendDays = await cal_ConstructionExtensionDays(currentItem.SF_OrdinalNum, currentItem.SF_ContractEndDate, true)
+        await updateItemIn('Form_Start_Finish_Detail', currentItem.ID, {
+            SF_ConstructionExtensionDays: extendDays
+        }).then(res => {
+            console.log(currentItem.SF_OrdinalNum, "updated");
+        }).catch(err => {
+            return false;
+        });
+
+    }
+
+    return true;
+
+}
+
+window.cal_ConstructionExtensionDays = async function (curOrdinalNum, SF_ContractEndDate = null, isCalculatingAllItems = false) {
+    let recent_End_Date;
+    if (curOrdinalNum === fd.field('SF_OrdinalNum').value + 1 && isCalculatingAllItems == true) {
+        recent_End_Date = fd.field('SF_ContractEndDate').value;
+    }
+    else {
+        recent_End_Date = await getItemsFrom('Form_Start_Finish_Detail', `SF_JobCode eq '${fd.field('SF_JobCode').value}' and SF_OrdinalNum lt ${curOrdinalNum}`, 'SF_UpdateCount')
+            .then(res => {
+                if (res.length == 0)
+                    return null;
+
+                let lastIndex = res.length - 1;
+                let recent_End_Construction_Date = res[lastIndex]['SF_ContractEndDate'];
+                return recent_End_Construction_Date;
+            });
+    }
+
+    let previousEndConstructionDay = recent_End_Date;
+    let currentEndConstructionDay = SF_ContractEndDate || null;
+
+    // Check for null values
+    if (previousEndConstructionDay == null) {
+        return 0;
+    } else if (currentEndConstructionDay == null)
+        return -1;
+
+    // Convert to Date objects
+    previousEndConstructionDay = new Date(previousEndConstructionDay);
+    currentEndConstructionDay = new Date(currentEndConstructionDay);
+
+    // Calculate the difference in milliseconds
+    let diffTime = previousEndConstructionDay - currentEndConstructionDay;
+
+    // Convert milliseconds to days
+    let ExtensionDays = Math.abs(Math.round(diffTime / (1000 * 60 * 60 * 24))); // Round up and abs to include partial days
+    return ExtensionDays;
+}
+
 fd.spBeforeRender(function () {
 }); // End fd.spBeforeRender
 
@@ -158,44 +220,15 @@ fd.spRendered(async function () {
         fd.field('SF_ConstructionDurationDays').value = cal_ConstructDurationDays();
     });
 
-    async function cal_ConstructionExtensionDays() {
-        let recent_End_Date = await getItemsFrom('Form_Start_Finish_Detail', `SF_JobCode eq '${fd.field('SF_JobCode').value}' and SF_OrdinalNum lt ${fd.field('SF_OrdinalNum').value}`, 'SF_UpdateCount')
-            .then(res => {
-                if (res.length == 0)
-                    return null;
-
-                let lastIndex = res.length - 1;
-                let recent_End_Construction_Date = res[lastIndex]['SF_ContractEndDate'];
-                return recent_End_Construction_Date;
-            })
-
-        let previousEndConstructionDay = recent_End_Date;
-        let currentEndConstructionDay = fd.field('SF_ContractEndDate').value || null;
-
-        // Check for null values
-        if (previousEndConstructionDay == null) {
-            return 0;
-        } else if (currentEndConstructionDay == null)
-            return -1;
-
-        // Convert to Date objects
-        previousEndConstructionDay = new Date(previousEndConstructionDay);
-        currentEndConstructionDay = new Date(currentEndConstructionDay);
-
-        // Calculate the difference in milliseconds
-        let diffTime = previousEndConstructionDay - currentEndConstructionDay;
-
-        // Convert milliseconds to days
-        let ExtensionDays = Math.abs(Math.round(diffTime / (1000 * 60 * 60 * 24))); // Round up and abs to include partial days
-        return ExtensionDays;
-    }
 
     // api cal
     fd.field('SF_ConstructionDurationDays').$on('change', async function () {
         console.log('construct duration changed');
-        let ExtensionDays = await cal_ConstructionExtensionDays();
+        let ExtensionDays = await cal_ConstructionExtensionDays(fd.field('SF_OrdinalNum').value, fd.field('SF_ContractEndDate').value);
         fd.field('SF_ConstructionExtensionDays').value = ExtensionDays;
     })
+
+
 
     fd.field('Attachments').validators.push({
         name: 'Check Attachment',
@@ -218,6 +251,7 @@ fd.spRendered(async function () {
 }); // end fd.spRendered
 
 fd.spBeforeSave(async function () {
+    await cal_restOfItems();
 }); // End fd.spBeforeSave
 
 fd.spSaved(function (result) {
