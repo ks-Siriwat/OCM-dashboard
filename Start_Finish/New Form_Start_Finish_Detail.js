@@ -186,7 +186,7 @@ fd.spRendered(async function () {
     });
 
     async function cal_ConstructionExtensionDays() {
-        let recent_End_Date = await getItemsFrom('Form_Start_Finish_Detail', `SF_JobCode eq '${fd.field('SF_JobCode').value}'`, 'SF_UpdateCount')
+        let recent_End_Date = await getItemsFrom('Form_Start_Finish_Detail', `SF_JobCode eq '${fd.field('SF_JobCode').value}' and SF_OrdinalNum lt ${fd.field('SF_OrdinalNum').value}`, 'SF_UpdateCount')
             .then(res => {
                 if (res.length == 0)
                     return null;
@@ -213,7 +213,7 @@ fd.spRendered(async function () {
         let diffTime = previousEndConstructionDay - currentEndConstructionDay;
 
         // Convert milliseconds to days
-        let ExtensionDays = Math.abs(Math.ceil(diffTime / (1000 * 60 * 60 * 24))); // Round up and abs to include partial days
+        let ExtensionDays = Math.abs(Math.round(diffTime / (1000 * 60 * 60 * 24))); // Round up and abs to include partial days
         return ExtensionDays;
     }
 
