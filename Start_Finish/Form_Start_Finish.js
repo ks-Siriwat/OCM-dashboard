@@ -159,14 +159,12 @@ fd.spRendered(async function () {
     }
     // fd.control('Form_Start_Finish_Detail').buttons[2].disabled = true;
 
-    fd.control('Form_Start_Finish_Detail').$on('change', async function (changedRow) {
-        // if (changedRow.type === 'add') {
-        //     await updateItemIn('Form_Start_Finish_Detail', changedRow.itemId, {
-        //         JobCode: fd.control('ProjectCode').value.LookupValue
-        //     }).then(_ => filterDataTable("Form_Start_Finish_Detail"));
-
-        // }
-    })
+    fd.control('Form_Start_Finish_Detail').templates = {
+        SF_Remark: function (ctx) {
+            const value = ctx.row.SF_Remark;
+            return `<span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${value}</span>`;
+        }
+    }
     $('.loading').fadeOut('slow');
 
 }); // end fd.spRendered

@@ -186,6 +186,10 @@ fd.spRendered(async function () {
             if (value.includes('-'))
                 return `<span style="color:#FF0000">${value}</span>`;
             return `<span>${value}</span>`;
+        },
+        Remark: function (ctx) {
+            const value = ctx.row.Remark;
+            return `<span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${value}</span>`;
         }
     }
 
