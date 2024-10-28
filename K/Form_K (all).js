@@ -189,7 +189,7 @@ fd.spRendered(async function () {
         },
         Remark: function (ctx) {
             const value = ctx.row.Remark;
-            return `<span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${value}</span>`;
+            return `<span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: inherit; display: block;">${value}</span>`;
         }
     }
 
