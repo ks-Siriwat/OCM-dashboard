@@ -138,7 +138,7 @@ fd.spRendered(async function () {
             .then(res => {
                 if (res.length === 0) {
                     newOrdinalNum = 1;
-                    newUpdateCount = 1;
+                    newUpdateCount = 0;
                 }
                 else {
                     let sortedOrdinalNum = res.map(e => e.SF_OrdinalNum).sort((a, b) => a - b);
